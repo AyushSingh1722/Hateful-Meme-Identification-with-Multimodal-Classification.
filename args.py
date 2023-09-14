@@ -1,15 +1,24 @@
+
 """
 CLI args for the various routines
 """
+# Import the argparse library for command-line argument parsing
 import argparse
 
+# Define a function to get command-line arguments needed for training
 def get_train_args():
     """Get arguments needed in train.py."""
+    
+    # Create an ArgumentParser object for parsing command-line arguments
     parser = argparse.ArgumentParser('Train a model on SQuAD')
 
+    # Add common arguments used across scripts (defined in add_common_args)
     add_common_args(parser)
+    
+    # Add training and testing related arguments (defined in add_train_test_args)
     add_train_test_args(parser)
 
+    # Add specific training-related arguments
     parser.add_argument('--eval_steps',
                         type=int,
                         default=8000,
@@ -57,22 +66,25 @@ def get_train_args():
                         choices=("baseline", "visualbert"),
                         help='Model choice for training')
 
+    # Parse the command-line arguments
     args = parser.parse_args()
 
+    # Set 'args.maximize_metric' based on the chosen evaluation metric
     if args.metric_name == 'NLL':
-        # Best checkpoint is the one that minimizes negative log-likelihood
-        args.maximize_metric = False
+        args.maximize_metric = False  # Minimize negative log-likelihood
     elif args.metric_name in ('EM', 'F1'):
-        # Best checkpoint is the one that maximizes EM or F1
-        args.maximize_metric = True
+        args.maximize_metric = True   # Maximize EM or F1
     else:
         raise ValueError(f'Unrecognized metric name: "{args.metric_name}"')
 
+    # Return the parsed arguments
     return args
 
-
+# Define a function to add common arguments used across scripts
 def add_common_args(parser):
     """Add arguments common to all 3 scripts: setup.py, train.py, test.py"""
+    
+    # Add file paths and paths to image and text models
     parser.add_argument('--train_eval_file',
                         type=str,
                         default='./hateful_memes/train.jsonl')
@@ -88,9 +100,11 @@ def add_common_args(parser):
     parser.add_argument('--text_model_path',
                         type=str)    
 
-
+# Define a function to add common training and testing arguments
 def add_train_test_args(parser):
     """Add arguments common to train.py and test.py"""
+    
+    # Add arguments related to identifying runs, batch size, model loading, etc.
     parser.add_argument('--name',
                         '-n',
                         type=str,
@@ -118,13 +132,20 @@ def add_train_test_args(parser):
                         default=None,
                         help='Path to load as a model checkpoint.')
 
+# Define a function to get command-line arguments needed for testing
 def get_test_args():
     """Get arguments needed in test.py."""
+    
+    # Create an ArgumentParser object for parsing command-line arguments
     parser = argparse.ArgumentParser('Test a trained model on SQuAD')
 
+    # Add common arguments used across scripts (defined in add_common_args)
     add_common_args(parser)
+    
+    # Add training and testing related arguments (defined in add_train_test_args)
     add_train_test_args(parser)
 
+    # Add specific testing-related arguments
     parser.add_argument('--split',
                         type=str,
                         default='dev',
@@ -145,9 +166,10 @@ def get_test_args():
                         help='Model best path tars for ensemble',
                         default = [])
 
-    # Require load_path for test.py
+    # Check if either a model load path or a list of ensemble models is provided
     args = parser.parse_args()
     if not args.load_path and not args.ensemble_list:
         raise argparse.ArgumentError('Missing required argument --load_path or --ensemble_list')
 
+    # Return the parsed arguments
     return args
