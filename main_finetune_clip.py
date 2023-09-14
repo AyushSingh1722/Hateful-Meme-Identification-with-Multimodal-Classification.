@@ -1,38 +1,23 @@
-from custom_collate import collate_mismatch
-import dataset_mismatch  
-import json 
-import os 
+# Import necessary libraries
 import torch
 import torchvision
-import torch.nn as nn
-import numpy as np 
-from torch.utils.data import DataLoader
-import argparse
-import io
-import clip_classifier
-import torch.nn.parallel
-import torch.backends.cudnn as cudnn
-import torch.optim
-import time 
-import clip 
-from sklearn.metrics import confusion_matrix, classification_report
+from torch.utils.data import Dataset, DataLoader
+import numpy as np
+import json
+from urllib.parse import urlparse
+from PIL import Image
+import os
+import clip
 import pickle
+import torch.nn as nn
+from sklearn.metrics import confusion_matrix, classification_report
 from tensorboardX import SummaryWriter
 from torch.optim.lr_scheduler import CosineAnnealingLR, CosineAnnealingWarmRestarts
 
+# Parse command-line arguments
+parser = argparse.ArgumentParser(description='Training using precomputed embeddings')
 
-parser = argparse.ArgumentParser(description='Training using the precomputed embeddings')
-##### locations #####  
-              
-parser.add_argument('--exp_folder', type=str, default='./exp/',
-                    help='path to the folder to log the output and save the models')
-                    
-###### model details ########                    
-parser.add_argument('--pdrop', type=float, default=0.5,
-                    help='dropout probability')
-
-
-##### Training details #####
+# Define various arguments for training
 parser.add_argument('--batch_size', type=int, default=32,
                     help='dimension of domains embeddings') 
 parser.add_argument('--num_workers', type=int, default=6,
@@ -66,17 +51,16 @@ torch.manual_seed(args.seed)
 torch.cuda.manual_seed(args.seed)
 
 #### load input files ####
-
-
-
 data_paths_hm_train = pickle.load(open('/data/home/rahulboipai/AIP_Project/CLIP_finetune/data_files/train_data_paths.pkl','rb'))
 data_paths_hm_test =  pickle.load(open('/data/home/rahulboipai/AIP_Project/CLIP_finetune/data_files/test_data_paths.pkl','rb'))
 
+# Set the computing device (GPU)
 device = torch.device('cuda:2')
 
 print(device,'\n')
 
 #### settings of the model ####
+# Load CLIP model and create a classifier
 model_settings = {'pdrop': args.pdrop}
 base_clip, preprocess = clip.load("ViT-B/32", device= device)
 classifier_clip = clip_classifier.ClipClassifier(model_settings,base_clip)
@@ -285,5 +269,4 @@ print('=' * 89)
 print('| End of training |  best acc | test loss {:5.2f} | test acc {:8.3f}'.format(
 test_loss, test_acc))
 print('=' * 89)
-
 
